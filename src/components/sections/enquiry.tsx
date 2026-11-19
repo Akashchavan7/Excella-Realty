@@ -9,7 +9,7 @@ export function Enquiry() {
     <section id="enquire" className="relative bg-ivory text-navy-900">
       <div className="grid lg:grid-cols-2">
         <div className="relative min-h-[300px] overflow-hidden text-ivory sm:min-h-[420px] lg:min-h-full">
-          <MediaImage mediaKey="polaris/arrival-port" alt="Exclusive arrival port at Excellaa Polaris" fill sizes="(min-width:1024px) 50vw, 100vw" className="object-cover" />
+          <MediaImage mediaKey="polaris/garden" alt="Landscaped greens at Excellaa Polaris" fill sizes="(min-width:1024px) 50vw, 100vw" className="object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/40 to-navy-950/20" />
           <div className="absolute inset-x-0 bottom-0 p-6 sm:p-12">
             <p className="eyebrow text-champagne">06 · Visit us</p>

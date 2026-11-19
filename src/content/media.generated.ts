@@ -6,12 +6,6 @@ export const media = {
     "height": 600,
     "blur": "data:image/webp;base64,UklGRoIAAABXRUJQVlA4WAoAAAAQAAAADwAABwAAQUxQSBEAAAABD9D/iAgIBJL2B18hov+RAwBWUDggSgAAABACAJ0BKhAACAADgFolmAJ0AQ716bV0vYAA/u3YwwPJFBOD1BSKvEL/TWGaovJB7A+YqxxD+pwBpxdnJQRim3hTLuWSt8De8gAA"
   },
-  "polaris/arrival-port": {
-    "src": "/images/polaris/arrival-port.webp",
-    "width": 1200,
-    "height": 600,
-    "blur": "data:image/webp;base64,UklGRkwAAABXRUJQVlA4IEAAAACwAQCdASoQAAgAA4BaJQBOgBuncu5AAP7c79rDZtvwEAK/JLPVsqmfqIXyvr59JYlpq8xPSuKInhGRFQgJ5dAA"
-  },
   "polaris/lobby": {
     "src": "/images/polaris/lobby.webp",
     "width": 1200,

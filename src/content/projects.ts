@@ -47,7 +47,6 @@ export const projects: Project[] = [
     cover: 'polaris/infinity-pool',
     gallery: [
       { image: 'polaris/infinity-pool', caption: 'Rooftop climatised infinity pool' },
-      { image: 'polaris/arrival-port', caption: 'Exclusive arrival port' },
       { image: 'polaris/lobby', caption: 'Grandiose lobby' },
       { image: 'polaris/residents-lounge', caption: 'Residents’ lounge' },
       { image: 'polaris/foyer', caption: 'Residents’ foyer' },

@@ -39,10 +39,10 @@ const chapters: Chapter[] = [
   {
     key: 'arrival',
     label: 'Arrival',
-    image: 'polaris/arrival-port',
+    image: 'polaris/lobby',
     line1: 'Arrive like',
     line2: 'you belong.',
-    text: 'An exclusive arrival port and a grandiose lobby — every homecoming at Excellaa Polaris begins with ceremony.',
+    text: 'A grandiose, five-star entrance lobby — every homecoming at Excellaa Polaris begins with ceremony.',
     project: { name: 'Excellaa Polaris', slug: 'excellaa-polaris', place: 'Bavdhan' },
     align: 'left',
   },
