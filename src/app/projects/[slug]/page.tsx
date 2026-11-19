@@ -155,7 +155,7 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
       </section>
 
       {/* ── Section nav ── */}
-      <nav aria-label="Project sections" className="sticky top-[72px] z-30 border-b border-navy-900/10 bg-ivory/90 backdrop-blur-xl">
+      <nav aria-label="Project sections" className="sticky top-[4.5rem] z-30 border-b border-navy-900/10 bg-ivory/90 backdrop-blur-xl">
         <div className="container-wide no-scrollbar flex gap-1 overflow-x-auto">
           {nav.map((n) => (
             <a key={n.id} href={`#${n.id}`} className="shrink-0 px-4 py-4 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-ink/60 transition hover:text-navy-900">

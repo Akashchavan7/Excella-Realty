@@ -64,7 +64,7 @@ export function Header() {
       )}
       onMouseLeave={closeMega}
     >
-      <div className={cn('container-wide flex items-center justify-between gap-8 transition-all duration-700', solid ? 'h-[72px]' : 'h-[88px]')}>
+      <div className={cn('container-wide flex items-center justify-between gap-8 transition-all duration-700', solid ? 'h-[4.5rem]' : 'h-[5.5rem]')}>
         <Logo reversed className={cn('transition-all duration-700', solid ? 'h-9' : 'h-11')} />
 
         <nav aria-label="Primary" className="hidden items-center gap-1 xl:flex">
