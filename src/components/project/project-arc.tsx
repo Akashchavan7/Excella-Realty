@@ -19,17 +19,18 @@ const filters: { id: Filter; label: string }[] = [
 ];
 
 /**
- * Arc carousel: the active project stands upright in the centre while its neighbours
- * fan out along a curve. Drag, scroll sideways or use the arrow keys; Enter opens.
+ * Cover-flow carousel: the active project faces the viewer in the centre while its
+ * neighbours turn away in 3D and stack behind it. It loops endlessly in both
+ * directions. Drag, scroll sideways or use the arrow keys; Enter opens.
  */
 export function ProjectArc({ projects }: { projects: Project[] }) {
   const router = useRouter();
   const reduce = useReducedMotion();
   const [filter, setFilter] = useState<Filter>('all');
-  const startIndex = (n: number) => Math.min(2, Math.max(0, n - 1));
-  const [active, setActive] = useState(() => startIndex(projects.length));
+  // `step` is unbounded so the carousel can keep turning; the active card is step mod count.
+  const [step, setStep] = useState(0);
   const [cardW, setCardW] = useState(300);
-  const pos = useMotionValue(startIndex(projects.length));
+  const pos = useMotionValue(0);
   const stageRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; start: number; moved: boolean } | null>(null);
   const wheelLock = useRef(0);
@@ -40,32 +41,36 @@ export function ProjectArc({ projects }: { projects: Project[] }) {
     return c;
   }, [projects]);
   const visible = useMemo(() => (filter === 'all' ? projects : projects.filter((p) => p.status === filter)), [filter, projects]);
-  const last = visible.length - 1;
+  const count = visible.length;
+  const active = count ? ((step % count) + count) % count : 0;
 
   useEffect(() => {
-    const onResize = () => setCardW(window.innerWidth < 640 ? Math.round(window.innerWidth * 0.6) : window.innerWidth < 1280 ? 270 : 310);
+    const onResize = () => {
+      // Follow the root font size so the carousel scales with the rest of the layout on big screens.
+      const k = parseFloat(getComputedStyle(document.documentElement).fontSize) / 16 || 1;
+      setCardW(window.innerWidth < 640 ? Math.round(window.innerWidth * 0.7) : Math.round((window.innerWidth < 1280 ? 460 : 600) * k));
+    };
     onResize();
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
   const goTo = useCallback(
-    (i: number) => {
-      const target = Math.max(0, Math.min(last, i));
-      setActive(target);
+    (target: number) => {
+      setStep(target);
       animate(pos, target, reduce ? { duration: 0 } : { type: 'spring', stiffness: 170, damping: 26 });
     },
-    [last, pos, reduce],
+    [pos, reduce],
   );
 
   const changeFilter = (f: Filter) => {
-    const start = startIndex(counts[f]);
     setFilter(f);
-    setActive(start);
-    pos.set(start);
+    setStep(0);
+    pos.set(0);
   };
 
-  const spacing = cardW * 1.32;
+  // Drag distance that advances the carousel by one card.
+  const spacing = cardW * 0.55;
 
   const onPointerDown = (e: React.PointerEvent) => {
     drag.current = { x: e.clientX, start: pos.get(), moved: false };
@@ -78,7 +83,7 @@ export function ProjectArc({ projects }: { projects: Project[] }) {
       d.moved = true;
       stageRef.current?.setPointerCapture(e.pointerId);
     }
-    if (d.moved) pos.set(Math.max(-0.4, Math.min(last + 0.4, d.start - dx / spacing)));
+    if (d.moved) pos.set(d.start - dx / spacing);
   };
   const onPointerUp = () => {
     const d = drag.current;
@@ -93,19 +98,25 @@ export function ProjectArc({ projects }: { projects: Project[] }) {
     const now = Date.now();
     if (now - wheelLock.current < 380) return;
     wheelLock.current = now;
-    goTo(active + (e.deltaX > 0 ? 1 : -1));
+    goTo(step + (e.deltaX > 0 ? 1 : -1));
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowRight') { e.preventDefault(); goTo(active + 1); }
-    if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(active - 1); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); goTo(step + 1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(step - 1); }
     if (e.key === 'Enter' && visible[active]) router.push(`/projects/${visible[active].slug}`);
   };
 
   const onCardClick = (i: number) => {
     if (drag.current?.moved) return;
-    if (i === active) router.push(`/projects/${visible[i]!.slug}`);
-    else goTo(i);
+    if (i === active) {
+      router.push(`/projects/${visible[i]!.slug}`);
+      return;
+    }
+    // Turn the shorter way round the loop.
+    let delta = (((i - active) % count) + count) % count;
+    if (delta > count / 2) delta -= count;
+    goTo(step + delta);
   };
 
   const current = visible[active];
@@ -131,10 +142,10 @@ export function ProjectArc({ projects }: { projects: Project[] }) {
           ))}
         </div>
         <div className="hidden items-center gap-3 sm:flex">
-          <button type="button" onClick={() => goTo(active - 1)} disabled={active === 0} aria-label="Previous project" className="grid size-12 place-items-center rounded-full border border-navy-900/20 text-navy-900 transition hover:bg-navy-900 hover:text-ivory disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-navy-900">
+          <button type="button" onClick={() => goTo(step - 1)} aria-label="Previous project" className="grid size-12 place-items-center rounded-full border border-navy-900/20 text-navy-900 transition hover:bg-navy-900 hover:text-ivory">
             <ArrowLeft className="size-5" />
           </button>
-          <button type="button" onClick={() => goTo(active + 1)} disabled={active === last} aria-label="Next project" className="grid size-12 place-items-center rounded-full border border-navy-900/20 text-navy-900 transition hover:bg-navy-900 hover:text-ivory disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-navy-900">
+          <button type="button" onClick={() => goTo(step + 1)} aria-label="Next project" className="grid size-12 place-items-center rounded-full border border-navy-900/20 text-navy-900 transition hover:bg-navy-900 hover:text-ivory">
             <ArrowRight className="size-5" />
           </button>
         </div>
@@ -152,15 +163,15 @@ export function ProjectArc({ projects }: { projects: Project[] }) {
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
         onWheel={onWheel}
-        className="relative mt-6 cursor-grab touch-pan-y select-none overflow-hidden outline-none active:cursor-grabbing"
-        style={{ height: cardW * 1.3 + 250 }}
+        className="relative mt-4 cursor-grab touch-pan-y select-none overflow-hidden outline-none active:cursor-grabbing"
+        style={{ height: (cardW < 400 ? cardW * 1.25 : cardW * 0.75) + Math.max(150, cardW * 0.27), perspective: Math.max(1700, cardW * 2.9) }}
       >
         {visible.map((p, i) => (
-          <ArcCard key={`${filter}-${p.slug}`} project={p} index={i} pos={pos} cardW={cardW} spacing={spacing} active={i === active} onClick={() => onCardClick(i)} />
+          <ArcCard key={`${filter}-${p.slug}`} project={p} index={i} count={count} pos={pos} cardW={cardW} active={i === active} onClick={() => onCardClick(i)} />
         ))}
       </div>
 
-      <div className="container-wide -mt-4 flex flex-col items-center gap-3 text-center">
+      <div className="container-wide mt-2 flex flex-col items-center gap-3 text-center">
         {current && (
           <p className="text-sm text-ink/70" aria-live="polite">
             <span className="font-medium text-navy-900">{current.configuration}</span>
@@ -180,27 +191,38 @@ export function ProjectArc({ projects }: { projects: Project[] }) {
 function ArcCard({
   project,
   index,
+  count,
   pos,
   cardW,
-  spacing,
   active,
   onClick,
 }: {
   project: Project;
   index: number;
+  count: number;
   pos: MotionValue<number>;
   cardW: number;
-  spacing: number;
   active: boolean;
   onClick: () => void;
 }) {
-  const offset = useTransform(pos, (v) => index - v);
-  const x = useTransform(offset, (o) => o * spacing);
-  const y = useTransform(offset, (o) => Math.min(o * o * 26, 220));
-  const rotate = useTransform(offset, (o) => Math.max(-28, Math.min(28, o * 8)));
-  const scale = useTransform(offset, (o) => 1 - Math.min(Math.abs(o), 2) * 0.06);
-  const opacity = useTransform(offset, (o) => (Math.abs(o) > 3.2 ? 0 : 1));
+  // Signed distance from the centre, wrapped so the list forms a loop.
+  const offset = useTransform(pos, (v) => {
+    let o = (((index - v) % count) + count) % count;
+    if (o > count / 2) o -= count;
+    return o;
+  });
+  // Cards fade out before the point where they wrap round to the other side.
+  const limit = Math.max(1.2, Math.min(3.6, count / 2 - 0.3));
+  // Within one step of the centre the card swings open; beyond that the cards stack closely.
+  const x = useTransform(offset, (o) => {
+    const c = Math.max(-1, Math.min(1, o));
+    return c * cardW * 0.66 + (o - c) * cardW * 0.2;
+  });
+  const rotateY = useTransform(offset, (o) => Math.max(-1, Math.min(1, o)) * -62);
+  const z = useTransform(offset, (o) => -Math.min(Math.abs(o), 1) * 260 - Math.max(0, Math.abs(o) - 1) * 40);
+  const opacity = useTransform(offset, (o) => Math.max(0, Math.min(1, (limit - Math.abs(o)) / 0.5)));
   const zIndex = useTransform(offset, (o) => 20 - Math.round(Math.abs(o)));
+  const filter = useTransform(offset, (o) => `brightness(${1 - Math.min(Math.abs(o), 1) * 0.28})`);
 
   return (
     <motion.div
@@ -208,16 +230,16 @@ function ArcCard({
       role="option"
       aria-selected={active}
       onClick={onClick}
-      className="absolute left-1/2 top-10 cursor-pointer"
-      style={{ width: cardW, marginLeft: -cardW / 2, x, y, rotate, scale, opacity, zIndex, transformOrigin: '50% 120%' }}
+      className="absolute left-1/2 top-6 cursor-pointer"
+      style={{ width: cardW, marginLeft: -cardW / 2, x, z, rotateY, opacity, zIndex, filter }}
     >
       {/* Location — above the image */}
-      <p className="eyebrow mb-3 flex items-center justify-center gap-1.5 text-[0.6rem] text-gold-600">
+      <p className={cn('eyebrow mb-3 flex items-center justify-center gap-1.5 text-[0.62rem] text-gold-600 transition-opacity duration-500', active ? 'opacity-100' : 'opacity-0')}>
         <MapPin className="size-3" aria-hidden /> {project.locality.split(',')[0]}
       </p>
-      <div className={cn('relative aspect-[3/4] overflow-hidden rounded-2xl bg-navy-900 shadow-xl shadow-navy-900/15 transition-shadow duration-500', active && 'shadow-2xl shadow-navy-900/30')}>
+      <div className={cn('relative aspect-[4/5] overflow-hidden rounded-2xl sm:aspect-[4/3] bg-navy-900 shadow-xl shadow-navy-900/20 transition-shadow duration-500', active && 'shadow-2xl shadow-navy-900/35')}>
         {project.cover ? (
-          <MediaImage mediaKey={project.cover} alt={`${project.name}, ${project.locality}`} fill sizes="320px" draggable={false} className="pointer-events-none object-cover" />
+          <MediaImage mediaKey={project.cover} alt={`${project.name}, ${project.locality}`} fill sizes="(min-width:1700px) 36vw, (min-width:1280px) 600px, (min-width:640px) 460px, 70vw" draggable={false} className="pointer-events-none object-cover" />
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
             <span className="absolute inset-4 rounded-xl border border-champagne/40" aria-hidden />
@@ -239,7 +261,7 @@ function ArcCard({
           <ArrowUpRight className="size-4" />
         </span>
       </div>
-      <p className="display mt-4 text-center text-[1.7rem] leading-tight text-navy-900">{project.name}</p>
+      <p className={cn('display mt-4 text-center text-[1.9rem] leading-tight text-navy-900 transition-opacity duration-500', active ? 'opacity-100' : 'opacity-0')}>{project.name}</p>
       <p className={cn('mt-1 text-center text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-navy-900 transition-opacity duration-500', active ? 'opacity-100' : 'opacity-0')}>
         Explore project
       </p>
