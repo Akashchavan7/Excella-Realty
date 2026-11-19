@@ -3,7 +3,7 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Map as MLMap, Marker } from 'maplibre-gl';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { ArrowUpRight, Compass, Layers, Loader2, MapPin, Navigation, RotateCcw, X } from 'lucide-react';
+import { ArrowDown, ArrowRight, ArrowUpRight, ChevronDown, Compass, Layers, Loader2, MapPin, Navigation, RotateCcw, X } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MediaImage } from '@/components/ui/media-image';
@@ -32,6 +32,8 @@ export function PuneExplorer() {
   const [active, setActive] = useState<NeighbourhoodId | null>(null);
   const [selected, setSelected] = useState<Project | null>(null);
   const [pitched, setPitched] = useState(true);
+  const listRef = useRef<HTMLUListElement>(null);
+  const [moreBelow, setMoreBelow] = useState(false);
 
   const visibleProjects = useMemo(() => mapped.filter((p) => filter === 'all' || p.status === filter), [filter]);
   const hoods = useMemo(
@@ -227,15 +229,31 @@ export function PuneExplorer() {
 
   const activeHood = hoods.find((h) => h.id === active);
 
+  // Show a "more" hint while the neighbourhood list can still be scrolled down.
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const update = () => setMoreBelow(el.scrollHeight - el.clientHeight - el.scrollTop > 12);
+    update();
+    el.addEventListener('scroll', update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    for (const child of Array.from(el.children)) ro.observe(child);
+    return () => {
+      el.removeEventListener('scroll', update);
+      ro.disconnect();
+    };
+  }, [hoods.length, active]);
+
   return (
-    <div ref={sectionRef} className="relative grid grid-cols-1 overflow-hidden border border-navy-900/10 bg-white shadow-2xl shadow-navy-900/10 lg:h-[min(86vh,860px)] lg:grid-cols-[400px_minmax(0,1fr)]">
+    <div ref={sectionRef} className="relative grid grid-cols-1 overflow-hidden border border-navy-900/10 bg-white shadow-2xl shadow-navy-900/10 lg:h-[min(86vh,54rem)] lg:grid-cols-[25rem_minmax(0,1fr)]">
       {/* ── Left: neighbourhood image sidebar (desktop) ── */}
-      <aside className="order-2 flex min-h-0 min-w-0 flex-col border-navy-900/10 bg-white lg:order-1 lg:border-r" aria-label="Neighbourhoods">
+      <aside className="relative order-2 flex min-h-0 min-w-0 flex-col border-navy-900/10 bg-white lg:order-1 lg:border-r" aria-label="Neighbourhoods">
         <div className="flex items-center justify-between gap-3 border-b border-navy-900/10 px-5 py-4">
           <p className="eyebrow text-gold-600">Neighbourhoods</p>
           <p className="text-xs text-stone">{visibleProjects.length} projects mapped</p>
         </div>
-        <ul className="no-scrollbar flex gap-3 overflow-x-auto p-4 lg:block lg:flex-1 lg:space-y-0 lg:overflow-y-auto lg:p-0">
+        <ul ref={listRef} className="no-scrollbar flex gap-3 overflow-x-auto p-4 lg:block lg:flex-1 lg:space-y-0 lg:overflow-y-auto lg:overscroll-contain lg:p-0">
           {hoods.map((n) => {
             const isActive = n.id === active;
             return (
@@ -245,23 +263,24 @@ export function PuneExplorer() {
                   onClick={() => (isActive ? resetView() : selectHood(n.id))}
                   aria-pressed={isActive}
                   className={cn(
-                    'group relative flex w-full items-stretch gap-4 overflow-hidden text-left transition-colors duration-500 lg:border-b lg:border-navy-900/10 lg:px-5 lg:py-4',
+                    'group relative flex w-full items-stretch gap-4 overflow-hidden text-left transition-colors duration-500 lg:border-b lg:border-navy-900/10 lg:px-5 lg:py-2.5',
                     isActive ? 'bg-sand/80' : 'hover:bg-sand/50',
                   )}
                 >
                   <span className={cn('absolute inset-y-0 left-0 w-0.5 bg-gold-500 transition-transform duration-500', isActive ? 'scale-y-100' : 'scale-y-0')} />
-                  <span className="relative block h-24 w-28 shrink-0 overflow-hidden lg:h-20 lg:w-24">
+                  <span className="relative block h-24 w-28 shrink-0 overflow-hidden lg:h-14 lg:w-20">
                     {n.image && (
                       <MediaImage mediaKey={n.image} alt="" fill sizes="120px" className="object-cover transition-transform duration-1000 group-hover:scale-110" />
                     )}
                   </span>
                   <span className="min-w-0 flex-1 py-1 pr-3 lg:pr-0">
-                    <span className="display block text-2xl text-navy-900">{n.name}</span>
-                    <span className="mt-1 block text-xs text-stone">
+                    <span className="display block text-2xl leading-tight text-navy-900 lg:text-[1.35rem]">{n.name}</span>
+                    <span className="mt-0.5 block text-xs text-stone">
                       {n.projects.length} {n.projects.length === 1 ? 'project' : 'projects'} ·{' '}
                       {n.projects.some((p) => p.status === 'ongoing') ? <span className="font-medium text-gold-600">Ongoing</span> : 'Delivered'}
                     </span>
                   </span>
+                  <ChevronDown className={cn('mr-4 hidden size-4 shrink-0 self-center text-stone transition-transform duration-500 lg:block lg:mr-0', isActive && 'rotate-180 text-gold-600')} aria-hidden />
                 </button>
                 <AnimatePresence initial={false}>
                   {isActive && (
@@ -272,24 +291,41 @@ export function PuneExplorer() {
                       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                       className="hidden overflow-hidden bg-sand/50 lg:block"
                     >
-                      <div className="space-y-4 px-5 pb-5 pt-1">
+                      <div className="space-y-3 px-5 pb-5 pt-1">
                         <p className="text-sm leading-relaxed text-ink/65">{n.blurb}</p>
-                        <ul className="space-y-1.5">
-                          {n.projects.map((p) => (
-                            <li key={p.slug}>
-                              <button
-                                type="button"
-                                onClick={() => selectProject(p)}
-                                className={cn('flex w-full items-center justify-between gap-3 py-1.5 text-left text-sm transition', selected?.slug === p.slug ? 'text-gold-600' : 'text-navy-900 hover:text-gold-600')}
-                              >
-                                <span className="flex items-center gap-2.5">
-                                  <span className={cn('size-2 rounded-full', p.status === 'ongoing' ? 'bg-gold-500' : 'bg-navy-900')} />
-                                  {p.name}
-                                </span>
-                                <span className="text-[0.65rem] uppercase tracking-[0.18em] text-stone">{statusLabel[p.status]}</span>
-                              </button>
-                            </li>
-                          ))}
+                        <p className="eyebrow text-[0.58rem] text-stone">Select a project to view it on the map</p>
+                        <ul className="space-y-2">
+                          {n.projects.map((p) => {
+                            const isSelected = selected?.slug === p.slug;
+                            return (
+                              <li key={p.slug}>
+                                <button
+                                  type="button"
+                                  onClick={() => selectProject(p)}
+                                  aria-pressed={isSelected}
+                                  className={cn(
+                                    'group/row flex w-full items-center gap-3 rounded-full border px-4 py-2.5 text-left text-sm shadow-sm transition-all duration-300',
+                                    isSelected
+                                      ? 'border-navy-900 bg-navy-900 text-ivory'
+                                      : 'border-navy-900/15 bg-white text-navy-900 hover:-translate-y-0.5 hover:border-navy-900/50 hover:shadow-md',
+                                  )}
+                                >
+                                  <span className={cn('size-2 shrink-0 rounded-full', p.status === 'ongoing' ? 'bg-gold-500' : isSelected ? 'bg-ivory' : 'bg-navy-900')} />
+                                  <span className="min-w-0 flex-1 truncate font-medium">{p.name}</span>
+                                  <span className={cn('text-[0.6rem] uppercase tracking-[0.16em]', isSelected ? 'text-champagne' : 'text-stone')}>{statusLabel[p.status]}</span>
+                                  <span
+                                    className={cn(
+                                      'grid size-7 shrink-0 place-items-center rounded-full transition-all duration-300',
+                                      isSelected ? 'bg-gold-500 text-navy-950' : 'bg-navy-900/5 text-navy-900 group-hover/row:bg-navy-900 group-hover/row:text-ivory',
+                                    )}
+                                    aria-hidden
+                                  >
+                                    <ArrowRight className="size-3.5 transition-transform duration-300 group-hover/row:translate-x-0.5" />
+                                  </span>
+                                </button>
+                              </li>
+                            );
+                          })}
                         </ul>
                       </div>
                     </motion.div>
@@ -299,6 +335,17 @@ export function PuneExplorer() {
             );
           })}
         </ul>
+        {moreBelow && (
+          <button
+            type="button"
+            onClick={() => listRef.current?.scrollBy({ top: 240, behavior: 'smooth' })}
+            className="absolute inset-x-0 bottom-0 hidden items-end justify-center bg-gradient-to-t from-white via-white/90 to-transparent pb-3 pt-12 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-navy-900 lg:flex"
+          >
+            <span className="flex items-center gap-2 rounded-full border border-navy-900/15 bg-white px-4 py-2 shadow-sm">
+              More neighbourhoods <ArrowDown className="size-3.5 animate-bounce" />
+            </span>
+          </button>
+        )}
       </aside>
 
       {/* ── Right: the map ── */}
@@ -384,7 +431,7 @@ export function PuneExplorer() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 16 }}
               transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute inset-x-3 bottom-3 z-10 bg-navy-950/95 text-ivory shadow-2xl shadow-black/50 backdrop-blur-xl sm:inset-x-auto sm:bottom-auto sm:right-5 sm:top-20 sm:w-[360px]"
+              className="absolute inset-x-3 bottom-3 z-10 bg-navy-950/95 text-ivory shadow-2xl shadow-black/50 backdrop-blur-xl sm:inset-x-auto sm:bottom-auto sm:right-5 sm:top-20 sm:w-[22.5rem]"
               role="dialog"
               aria-label={`${selected.name} details`}
             >

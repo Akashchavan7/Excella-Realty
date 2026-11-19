@@ -15,20 +15,20 @@ export const PUNE_BOUNDS: [[number, number], [number, number]] = [
 ];
 
 const C = {
-  background: '#06021f',
-  land: '#090431',
-  park: '#0b0a36',
-  water: '#0f0b48',
-  waterLine: '#231a70',
-  building: '#140e45',
-  roadMajor: '#3b3090',
-  roadMid: '#261d68',
-  roadMinor: '#17114a',
-  rail: '#2a2160',
-  boundary: '#3a2f80',
-  label: '#8c86ad',
-  labelPlace: '#8f8ab3',
-  halo: '#05011a',
+  background: '#1c1759',
+  land: '#221c66',
+  park: '#23266e',
+  water: '#3a3aa6',
+  waterLine: '#4a49b8',
+  building: '#332b85',
+  roadMajor: '#7a70d6',
+  roadMid: '#584eb4',
+  roadMinor: '#3f3692',
+  rail: '#4a4199',
+  boundary: '#6258bd',
+  label: '#c3bfe6',
+  labelPlace: '#cfcbee',
+  halo: '#15104a',
 };
 
 function recolourLayer(layer: LayerSpecification): LayerSpecification | null {
@@ -67,7 +67,7 @@ function recolourLayer(layer: LayerSpecification): LayerSpecification | null {
       l.paint['text-color'] = place ? C.labelPlace : C.label;
       l.paint['text-halo-color'] = C.halo;
       l.paint['text-halo-width'] = 1.2;
-      if (place) l.paint['text-opacity'] = 0.6;
+      if (place) l.paint['text-opacity'] = 0.75;
       break;
     }
     case 'fill-extrusion':
@@ -128,9 +128,9 @@ export function enhanceMap(map: MLMap, opts: { exaggeration?: number } = {}) {
         type: 'hillshade',
         source: 'hillshade-dem',
         paint: {
-          'hillshade-shadow-color': '#02000d',
-          'hillshade-highlight-color': '#3b2f8f',
-          'hillshade-accent-color': '#120b45',
+          'hillshade-shadow-color': '#0d0838',
+          'hillshade-highlight-color': '#6f64d2',
+          'hillshade-accent-color': '#231c6c',
           'hillshade-exaggeration': 0.55,
           'hillshade-illumination-direction': 315,
         },
@@ -149,7 +149,7 @@ export function enhanceMap(map: MLMap, opts: { exaggeration?: number } = {}) {
         'source-layer': 'building',
         minzoom: 13.5,
         paint: {
-          'fill-extrusion-color': ['interpolate', ['linear'], ['coalesce', ['get', 'render_height'], 8], 0, '#140e45', 60, '#2b2180'],
+          'fill-extrusion-color': ['interpolate', ['linear'], ['coalesce', ['get', 'render_height'], 8], 0, '#3a3192', 60, '#6258c4'],
           'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 13.5, 0, 15, ['coalesce', ['get', 'render_height'], 8]],
           'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], 0],
           'fill-extrusion-opacity': 0.85,
@@ -161,9 +161,9 @@ export function enhanceMap(map: MLMap, opts: { exaggeration?: number } = {}) {
 
   map.setTerrain({ source: 'terrain-dem', exaggeration: opts.exaggeration ?? 1.5 });
   map.setSky({
-    'sky-color': '#05011a',
-    'horizon-color': '#1d1458',
-    'fog-color': '#06021f',
+    'sky-color': '#17124f',
+    'horizon-color': '#4a40a8',
+    'fog-color': '#1c1759',
     'sky-horizon-blend': 0.6,
     'horizon-fog-blend': 0.7,
     'fog-ground-blend': 0.4,

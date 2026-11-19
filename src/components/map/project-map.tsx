@@ -91,7 +91,7 @@ export function ProjectMap({ name, geo, neighbours = [] }: { name: string; geo: 
   }, [inView]);
 
   return (
-    <div className="relative h-[480px] overflow-hidden bg-navy-950 lg:h-[600px]">
+    <div className="relative h-[480px] overflow-hidden bg-navy-950 lg:h-[37.5rem]">
       <div ref={ref} style={{ position: 'absolute', inset: 0 }} />
       {state !== 'ready' && (
         <div className="absolute inset-0 grid place-items-center bg-[radial-gradient(ellipse_at_center,#140a52_0%,#05011a_70%)] text-sm text-mist">
