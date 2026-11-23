@@ -60,7 +60,7 @@ export function Header() {
     <header
       className={cn(
         'fixed inset-x-0 top-0 z-50 transition-all duration-700 ease-[var(--ease-lux)]',
-        solid ? 'bg-navy-950/92 shadow-[0_1px_0_rgba(214,182,121,0.15)] backdrop-blur-xl' : 'bg-gradient-to-b from-navy-950/70 to-transparent',
+        solid ? 'bg-navy-950/92 shadow-[0_1px_0_rgba(214,182,121,0.15)] backdrop-blur-xl' : 'bg-gradient-to-b from-black/35 to-transparent',
       )}
       onMouseLeave={closeMega}
     >

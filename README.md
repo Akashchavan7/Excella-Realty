@@ -48,3 +48,11 @@ src/lib/site.ts          contact details, offices, social links
   Most originals are 800–1400 px wide; higher-resolution renders from Excellaa would sharpen the
   hero and galleries.
 - **Journal** articles link to the existing posts on excellaa.com.
+- **Hero film**: the homepage hero is a scroll-driven fly-through (Primarc → Florence → Virtu →
+  Tremont). Scrolling sets the time of short clips in `public/hero`. Each stop has a fly-in through
+  a window and a walk through the room out to the sky, and the clips crossfade at their soft ends.
+  Copy and timing live in `src/content/hero-film.ts` and `src/components/sections/hero.tsx`. The
+  clips are built from source footage in `assets/hero`, which is kept out of git, by
+  `npm run hero:build` (needs `ffmpeg`). Its segment list, trims and joins are at the top of
+  `scripts/build-hero-film.mjs`. The footage is AI-assisted visualisation, and the hero labels it
+  as an artist's impression.

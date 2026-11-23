@@ -9,3 +9,6 @@ npm-debug.log*
 .DS_Store
 .vercel
 public/maplibre
+
+# raw AI-generated hero sources (large); processed frames are committed separately
+assets/hero/
