@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start -p 6500",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "hero:build": "node scripts/build-hero-film.mjs"
   },
   "engines": {
     "node": ">=20.9.0"
